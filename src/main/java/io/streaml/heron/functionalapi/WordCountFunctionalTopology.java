@@ -3,7 +3,12 @@ package io.streaml.heron.functionalapi;
 import java.util.Arrays;
 
 import com.twitter.heron.common.basics.ByteAmount;
-import com.twitter.heron.dsl.*;
+import com.twitter.heron.dsl.Builder;
+import com.twitter.heron.dsl.Config;
+import com.twitter.heron.dsl.KeyValue;
+import com.twitter.heron.dsl.Resources;
+import com.twitter.heron.dsl.Runner;
+import com.twitter.heron.dsl.WindowConfig;
 
 public final class WordCountFunctionalTopology {
     private static final float CPU = 1.0f;
@@ -11,10 +16,6 @@ public final class WordCountFunctionalTopology {
     private static final int NUM_CONTAINERS = 2;
 
     private WordCountFunctionalTopology() {
-    }
-
-    private static boolean isEffectivelyOnce(String[] args) {
-        return (args.length > 1 && args[1].equals("effectively-once"));
     }
 
     public static void main(String[] args) throws Exception {
@@ -27,17 +28,11 @@ public final class WordCountFunctionalTopology {
 
         Config conf = new Config();
         conf.setNumContainers(NUM_CONTAINERS);
+        conf.setDeliverySemantics(deliverySemantics(args));
 
         Resources resources = new Resources();
         resources.withCpu(CPU);
         resources.withRam(ByteAmount.fromMegabytes(MEGS_RAM).asMegabytes());
-
-        if (isEffectivelyOnce(args)) {
-            conf.setDeliverySemantics(Config.DeliverySemantics.EFFECTIVELY_ONCE);
-            System.out.println("Running topology with effectively-once semantics");
-        }
-
-        Runner runner = new Runner();
 
         String topologyName;
 
@@ -47,6 +42,24 @@ public final class WordCountFunctionalTopology {
             topologyName = args[0];
         }
 
-        runner.run(topologyName, conf, builder);
+        new Runner().run(topologyName, conf, builder);
+    }
+
+    private static Config.DeliverySemantics deliverySemantics(String[] args) throws Exception {
+        if (args.length > 1) {
+            switch(args[1]) {
+                case "at-most-once":
+                    return Config.DeliverySemantics.ATMOST_ONCE;
+                case "at-least-once":
+                    return Config.DeliverySemantics.ATLEAST_ONCE;
+                case "effectively-once":
+                    return Config.DeliverySemantics.EFFECTIVELY_ONCE;
+                default:
+                    throw new Exception("You've selected a delivery semantics that is not amongst the available options: " +
+                            "at-most-once, at-least-once, effectively-once");
+            }
+        } else {
+            return Config.DeliverySemantics.ATLEAST_ONCE;
+        }
     }
 }
