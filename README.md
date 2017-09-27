@@ -18,10 +18,10 @@ That will create a "fat" topology JAR in `target/heron-java-dsl-example-0.1.0-ja
 
 ## Submitting the topology to Heron
 
-If you're running a [local Heron cluster](../../../getting-started), you can submit the built example topology like this:
+To submit the example topology to a Heron cluster:
 
 ```bash
-$ heron submit local target/heron-java-functional-api-example-latest-jar-with-dependencies.jar \
+$ heron submit local target/heron-java-dsl-example-0.1.0-jar-with-dependencies.jar \
   io.streaml.heron.functionalapi.WordCountFunctionalTopology \
   WordCountFunctionalTopology
 ```
