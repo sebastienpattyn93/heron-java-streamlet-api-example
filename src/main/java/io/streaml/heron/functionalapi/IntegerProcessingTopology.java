@@ -1,29 +1,35 @@
 package io.streaml.heron.functionalapi;
 
-import java.util.Arrays;
-
 import com.twitter.heron.common.basics.ByteAmount;
-import com.twitter.heron.dsl.Builder;
-import com.twitter.heron.dsl.Config;
-import com.twitter.heron.dsl.KeyValue;
-import com.twitter.heron.dsl.Resources;
-import com.twitter.heron.dsl.Runner;
-import com.twitter.heron.dsl.WindowConfig;
+import com.twitter.heron.dsl.*;
 
-public final class WordCountFunctionalTopology {
+import java.util.concurrent.ThreadLocalRandom;
+
+public final class IntegerProcessingTopology {
     private static final float CPU = 1.0f;
     private static final long MEGS_RAM = 1024;
     private static final int NUM_CONTAINERS = 2;
 
-    private WordCountFunctionalTopology() {
+    private IntegerProcessingTopology() {
     }
 
     public static void main(String[] args) throws Exception {
         Builder builder = Builder.CreateBuilder();
-        builder.newSource(() -> "Mary had a little lamb")
-                .flatMap((sentence) -> Arrays.asList(sentence.split("\\s+")))
-                .mapToKV((word) -> new KeyValue<>(word, 1))
-                .reduceByKeyAndWindow(WindowConfig.TumblingCountWindow(10), (x, y) -> x + y)
+
+        Streamlet<Integer> zeroes = builder.newSource(() -> 0);
+
+        builder.newSource(() -> ThreadLocalRandom.current().nextInt(1, 11))
+                .setName("random-ints")
+                .setNumPartitions(3)
+                .map(i -> i + 1)
+                .setName("add-one")
+                .setNumPartitions(2)
+                .union(zeroes)
+                .setName("unify-streams")
+                .setNumPartitions(1)
+                .filter(i -> i != 2)
+                .setName("remove-twos")
+                .setNumPartitions(2)
                 .log();
 
         Config conf = new Config();
@@ -49,10 +55,13 @@ public final class WordCountFunctionalTopology {
         if (args.length > 1) {
             switch(args[1]) {
                 case "at-most-once":
+                    System.out.println("Applying at-most-once semantics");
                     return Config.DeliverySemantics.ATMOST_ONCE;
                 case "at-least-once":
+                    System.out.println("Applying at-least-once semantics");
                     return Config.DeliverySemantics.ATLEAST_ONCE;
                 case "effectively-once":
+                    System.out.println("Applying effectively-once semantics");
                     return Config.DeliverySemantics.EFFECTIVELY_ONCE;
                 default:
                     throw new Exception("You've selected a delivery semantics that is not amongst the available options: " +
