@@ -2,30 +2,51 @@ package io.streaml.heron.functionalapi;
 
 import java.util.Arrays;
 
+import com.twitter.heron.common.basics.ByteAmount;
 import com.twitter.heron.dsl.*;
 
 public final class WordCountFunctionalTopology {
+    private static final float CPU = 1.0f;
+    private static final long MEGS_RAM = 1024;
+    private static final int NUM_CONTAINERS = 2;
+
     private WordCountFunctionalTopology() {
     }
 
-    public static void main(String[] args) {
-        if (args.length < 1) {
-            throw new RuntimeException("Specify topology name");
-        }
+    private static boolean isEffectivelyOnce(String[] args) {
+        return (args.length > 1 && args[1].equals("effectively-once"));
+    }
 
-        int numContainers = 1;
-        if (args.length > 1) {
-            numContainers = Integer.parseInt(args[1]);
-        }
+    public static void main(String[] args) throws Exception {
         Builder builder = Builder.CreateBuilder();
         builder.newSource(() -> "Mary had a little lamb")
                 .flatMap((sentence) -> Arrays.asList(sentence.split("\\s+")))
                 .mapToKV((word) -> new KeyValue<>(word, 1))
                 .reduceByKeyAndWindow(WindowConfig.TumblingCountWindow(10), (x, y) -> x + y)
                 .log();
+
         Config conf = new Config();
-        conf.setNumContainers(numContainers);
+        conf.setNumContainers(NUM_CONTAINERS);
+
+        Resources resources = new Resources();
+        resources.withCpu(CPU);
+        resources.withRam(ByteAmount.fromMegabytes(MEGS_RAM).asMegabytes());
+
+        if (isEffectivelyOnce(args)) {
+            conf.setDeliverySemantics(Config.DeliverySemantics.EFFECTIVELY_ONCE);
+            System.out.println("Running topology with effectively-once semantics");
+        }
+
         Runner runner = new Runner();
-        runner.run(args[0], conf, builder);
+
+        String topologyName;
+
+        if (args.length == 0) {
+            throw new Exception("You must supply a name for the topology");
+        } else {
+            topologyName = args[0];
+        }
+
+        runner.run(topologyName, conf, builder);
     }
 }
