@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.streaml.dsl</groupId>
-    <artifactId>heron-java-dsl-example</artifactId>
-    <version>0.1.0</version>
+    <groupId>io.streaml.heron.functionalapi</groupId>
+    <artifactId>heron-java-functional-api-example</artifactId>
+    <version>latest</version>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>

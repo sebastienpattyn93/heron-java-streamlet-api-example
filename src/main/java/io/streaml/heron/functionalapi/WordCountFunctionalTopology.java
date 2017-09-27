@@ -1,11 +1,11 @@
-package io.streaml.dsl;
+package io.streaml.heron.functionalapi;
 
 import java.util.Arrays;
 
 import com.twitter.heron.dsl.*;
 
-public final class WordCountDslTopology {
-    private WordCountDslTopology() {
+public final class WordCountFunctionalTopology {
+    private WordCountFunctionalTopology() {
     }
 
     public static void main(String[] args) {
@@ -13,9 +13,9 @@ public final class WordCountDslTopology {
             throw new RuntimeException("Specify topology name");
         }
 
-        int parallelism = 1;
+        int numContainers = 1;
         if (args.length > 1) {
-            parallelism = Integer.parseInt(args[1]);
+            numContainers = Integer.parseInt(args[1]);
         }
         Builder builder = Builder.CreateBuilder();
         builder.newSource(() -> "Mary had a little lamb")
@@ -24,7 +24,7 @@ public final class WordCountDslTopology {
                 .reduceByKeyAndWindow(WindowConfig.TumblingCountWindow(10), (x, y) -> x + y)
                 .log();
         Config conf = new Config();
-        conf.setNumContainers(parallelism);
+        conf.setNumContainers(numContainers);
         Runner runner = new Runner();
         runner.run(args[0], conf, builder);
     }
