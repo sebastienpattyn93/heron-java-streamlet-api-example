@@ -17,13 +17,7 @@
         <dependency>
             <groupId>com.twitter.heron</groupId>
             <artifactId>heron-api</artifactId>
-            <version>0.15.2</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.twitter.heron.dsl</groupId>
-            <artifactId>heron-dsl</artifactId>
-            <version>0.15.3</version>
+            <version>0.16.1</version>
         </dependency>
     </dependencies>
 
