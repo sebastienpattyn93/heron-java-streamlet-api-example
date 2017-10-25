@@ -19,7 +19,7 @@ public class WindowedWordCount {
     }
 
     private static List<String> splitIntoWords(String sentence) {
-        return Arrays.asList(sentence.split("\\s+");
+        return Arrays.asList(sentence.split("\\s+"));
     }
 
     private static KeyValue<String, Integer> increment(String word) {
