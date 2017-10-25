@@ -49,7 +49,7 @@ public class WireRequestsTopology {
 
         @Override
         public String toString() {
-            return String.format("User: %s. Amount: %d.", userId, amount);
+            return String.format("Accepted request for %d from user %s", amount, userId);
         }
     }
 
