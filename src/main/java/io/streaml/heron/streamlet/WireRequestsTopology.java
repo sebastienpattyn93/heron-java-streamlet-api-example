@@ -13,8 +13,8 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class WireRequestsTopology {
-    private static final List<String> USERS = Arrays.asList("honest-tina", "honest-jeff", "scheming-dave", "scheming-george");
-    private static final List<String> FRAUDULENT_USERS = Arrays.asList("scheming-dave", "scheming-george");
+    private static final List<String> USERS = Arrays.asList("honest-tina", "honest-jeff", "scheming-dave", "scheming-linda");
+    private static final List<String> FRAUDULENT_USERS = Arrays.asList("scheming-dave", "scheming-linda");
 
     private static <T> T randomFromList(List<T> ls) {
         return ls.get(new Random().nextInt(ls.size()));
@@ -82,7 +82,7 @@ public class WireRequestsTopology {
                 .filter(WireRequestsTopology::checkBalance)
                 .setName("check-balance-stream-1")
                 .repartition(1)
-                .setName("reduce-to-1-partition-1")
+                .setName("reduce-to-1-partition-stream-1")
                 .filter(WireRequestsTopology::fraudDetect)
                 .setName("fraud-detect-stream-1");
 
@@ -90,7 +90,7 @@ public class WireRequestsTopology {
                 .filter(WireRequestsTopology::checkBalance)
                 .setName("check-balance-stream-2")
                 .repartition(1)
-                .setName("reduce-to-1-partition-2")
+                .setName("reduce-to-1-partition-stream-2")
                 .filter(WireRequestsTopology::fraudDetect)
                 .setName("fraud-detect-stream-2");
 
