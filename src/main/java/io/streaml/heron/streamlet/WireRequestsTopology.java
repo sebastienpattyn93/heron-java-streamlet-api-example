@@ -13,7 +13,8 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class WireRequestsTopology {
-    private static final List<String> USERS = Arrays.asList("honest-tina", "scheming-dave");
+    private static final List<String> USERS = Arrays.asList("honest-tina", "honest-jeff", "scheming-dave", "scheming-george");
+    private static final List<String> FRAUDULENT_USERS = Arrays.asList("scheming-dave", "scheming-george");
 
     private static <T> T randomFromList(List<T> ls) {
         return ls.get(new Random().nextInt(ls.size()));
@@ -53,7 +54,7 @@ public class WireRequestsTopology {
     }
 
     private static boolean fraudDetect(WireRequest req) {
-        boolean fraudulent = req.getUserId().equals("scheming-dave");
+        boolean fraudulent = FRAUDULENT_USERS.contains(req.getUserId());
 
         if (fraudulent) System.out.println(String.format("Rejected fraudulent user %s", req.getUserId()));
 
@@ -81,6 +82,7 @@ public class WireRequestsTopology {
                 .filter(WireRequestsTopology::checkBalance)
                 .setName("check-balance-stream-1")
                 .repartition(1)
+                .setName("reduce-to-1-partition-1")
                 .filter(WireRequestsTopology::fraudDetect)
                 .setName("fraud-detect-stream-1");
 
@@ -88,14 +90,19 @@ public class WireRequestsTopology {
                 .filter(WireRequestsTopology::checkBalance)
                 .setName("check-balance-stream-2")
                 .repartition(1)
+                .setName("reduce-to-1-partition-2")
                 .filter(WireRequestsTopology::fraudDetect)
                 .setName("fraud-detect-stream-2");
 
         Streamlet<WireRequest> reunitedStream = stream1.union(stream2)
                 .setName("unite-streams")
-                .setNumPartitions(2);
+                .repartition(2)
+                .setName("increase-to-2-partitions");
 
-        reunitedStream.log();
+        reunitedStream
+                .repartition(1)
+                .setName("reduce-back-to-1-partition")
+                .log();
 
         Config config = new Config();
         config.setDeliverySemantics(Config.DeliverySemantics.EFFECTIVELY_ONCE);
