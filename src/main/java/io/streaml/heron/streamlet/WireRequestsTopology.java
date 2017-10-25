@@ -108,6 +108,6 @@ public class WireRequestsTopology {
         config.setDeliverySemantics(Config.DeliverySemantics.EFFECTIVELY_ONCE);
         config.setNumContainers(2);
 
-        new Runner().run(args[0], new Config(), builder);
+        new Runner().run(args[0], config, builder);
     }
 }
