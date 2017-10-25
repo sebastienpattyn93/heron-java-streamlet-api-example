@@ -1,0 +1,92 @@
+package io.streaml.heron.streamlet;
+
+import com.twitter.heron.api.utils.Utils;
+import com.twitter.heron.dsl.Builder;
+import com.twitter.heron.dsl.Config;
+import com.twitter.heron.dsl.Runner;
+import com.twitter.heron.dsl.Streamlet;
+
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+
+public class WireRequestsTopology {
+    private static final List<String> USERS = Arrays.asList("honest-tina", "scheming-dave");
+
+    private static <T> T randomFromList(List<T> ls) {
+        return ls.get(new Random().nextInt(ls.size()));
+    }
+
+    private static class WireRequest implements Serializable {
+        private String userId;
+        private int amount;
+
+        WireRequest() {
+            Utils.sleep(10);
+            this.userId = randomFromList(USERS);
+            this.amount = ThreadLocalRandom.current().nextInt(1000);
+            System.out.println(this.toString());
+        }
+
+        String getUserId() {
+            return userId;
+        }
+
+        int getAmount() {
+            return amount;
+        }
+
+        void setUserId(String userId) {
+            this.userId = userId;
+        }
+
+        void setAmount(int amount) {
+            this.amount = amount;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("User: %s. Amount: %d.", userId, amount);
+        }
+    }
+
+    private static boolean fraudDetect(WireRequest req) {
+        boolean fraudulent = req.getUserId().equals("scheming-dave");
+
+        if (fraudulent) System.out.println(String.format("Rejected fraudulent user %s", req.getUserId()));
+
+        return !fraudulent;
+    }
+
+    private static boolean checkBalance(WireRequest req) {
+        boolean sufficientBalance = req.getAmount() < 500;
+
+        if (!sufficientBalance) System.out.println(String.format("Rejected insufficient balance of %d", req.getAmount()));
+
+        return sufficientBalance;
+    }
+
+    public static void main(String[] args) {
+        Builder builder = Builder.createBuilder();
+
+        Streamlet<WireRequest> incomingWireRequests = builder.newSource(WireRequest::new);
+
+        List<Streamlet<WireRequest>> forkedStream = incomingWireRequests.clone(2);
+
+        Streamlet<WireRequest> stream1 = forkedStream.get(0)
+                .filter(WireRequestsTopology::checkBalance)
+                .filter(WireRequestsTopology::fraudDetect);
+
+        Streamlet<WireRequest> stream2 = forkedStream.get(1)
+                .filter(WireRequestsTopology::checkBalance)
+                .filter(WireRequestsTopology::fraudDetect);
+
+        Streamlet<WireRequest> reunitedStream = stream1.union(stream2);
+
+        reunitedStream.log();
+
+        new Runner().run(args[0], new Config(), builder);
+    }
+}

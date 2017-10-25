@@ -14,7 +14,7 @@ public final class IntegerProcessingTopology {
     }
 
     public static void main(String[] args) throws Exception {
-        Builder builder = Builder.CreateBuilder();
+        Builder builder = Builder.createBuilder();
 
         Streamlet<Integer> zeroes = builder.newSource(() -> 0);
 
