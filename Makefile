@@ -8,7 +8,7 @@ wire-requests: assembly
 	heron submit local ${JAR} ${ROOT_LIB}.WireRequestsTopology WireRequests
 
 wire-requests-kill:
-	heron kill local WireRequestsTopology
+	heron kill local WireRequests
 
 impressions-and-clicks: assembly
 	heron submit local ${JAR} ${ROOT_LIB}.ImpressionsAndClicksTopology ImpressionsAndClicks

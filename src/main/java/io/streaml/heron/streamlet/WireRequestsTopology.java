@@ -90,11 +90,14 @@ public class WireRequestsTopology {
 
         quietBranch
                 .union(mediumBranch)
+                .setNumPartitions(2)
                 .setName("union-1")
                 .union(busyBranch)
                 .setName("union-2")
+                .setNumPartitions(4)
                 .filter(WireRequestsTopology::fraudDetect)
                 .setName("all-branches-fraud-detect")
+                .repartition(2)
                 .log();
 
         Config config = new Config();
