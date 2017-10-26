@@ -15,6 +15,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class WireRequestsTopology {
     private static final List<String> USERS = Arrays.asList("honest-tina", "honest-jeff", "scheming-dave", "scheming-linda");
     private static final List<String> FRAUDULENT_USERS = Arrays.asList("scheming-dave", "scheming-linda");
+    private static final int MAX_ALLOWABLE_AMOUNT = 500;
 
     private static <T> T randomFromList(List<T> ls) {
         return ls.get(new Random().nextInt(ls.size()));
@@ -56,8 +57,8 @@ public class WireRequestsTopology {
         return !fraudulent;
     }
 
-    private static boolean checkBalance(WireRequest request) {
-        boolean sufficientBalance = request.getAmount() < 500;
+    private static boolean checkRequestAmount(WireRequest request) {
+        boolean sufficientBalance = request.getAmount() < MAX_ALLOWABLE_AMOUNT;
 
         if (!sufficientBalance) System.out.println(String.format("Rejected excessive request of $%d", request.getAmount()));
 
@@ -70,17 +71,17 @@ public class WireRequestsTopology {
         Streamlet<WireRequest> quietBranch = builder.newSource(() -> new WireRequest(20))
                 .setNumPartitions(1)
                 .setName("quiet-branch-requests")
-                .filter(WireRequestsTopology::checkBalance)
+                .filter(WireRequestsTopology::checkRequestAmount)
                 .setName("quiet-branch-check-balance");
         Streamlet<WireRequest> mediumBranch = builder.newSource(() -> new WireRequest(10))
                 .setNumPartitions(2)
                 .setName("medium-branch-requests")
-                .filter(WireRequestsTopology::checkBalance)
+                .filter(WireRequestsTopology::checkRequestAmount)
                 .setName("medium-branch-check-balance");
         Streamlet<WireRequest> busyBranch = builder.newSource(() -> new WireRequest(5))
                 .setNumPartitions(4)
                 .setName("busy-branch-requests")
-                .filter(WireRequestsTopology::checkBalance)
+                .filter(WireRequestsTopology::checkRequestAmount)
                 .setName("busy-branch-check-balance");
 
         quietBranch
