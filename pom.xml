@@ -16,8 +16,8 @@
     <dependencies>
         <dependency>
             <groupId>com.twitter.heron</groupId>
-            <artifactId>heron-local</artifactId>
-            <version>1.0</version>
+            <artifactId>heron-api</artifactId>
+            <version>0.16.3</version>
         </dependency>
     </dependencies>
 
