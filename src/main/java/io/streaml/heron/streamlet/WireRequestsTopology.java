@@ -38,33 +38,28 @@ public class WireRequestsTopology {
         int getAmount() {
             return amount;
         }
-
-        void setUserId(String userId) {
-            this.userId = userId;
-        }
-
-        void setAmount(int amount) {
-            this.amount = amount;
-        }
-
-        @Override
-        public String toString() {
-            return String.format("Accepted request for $%d from user %s", amount, userId);
-        }
     }
 
-    private static boolean fraudDetect(WireRequest req) {
-        boolean fraudulent = FRAUDULENT_USERS.contains(req.getUserId());
+    private static boolean fraudDetect(WireRequest request) {
+        String logMessage;
 
-        if (fraudulent) System.out.println(String.format("Rejected fraudulent user %s", req.getUserId()));
+        boolean fraudulent = FRAUDULENT_USERS.contains(request.getUserId());
+
+        if (fraudulent) {
+            logMessage = String.format("Rejected fraudulent user %s", request.getUserId());
+        } else {
+            logMessage = String.format("Accepted request for $%d from user %s", request.getAmount(), request.getUserId());
+        }
+
+        System.out.println(logMessage);
 
         return !fraudulent;
     }
 
-    private static boolean checkBalance(WireRequest req) {
-        boolean sufficientBalance = req.getAmount() < 500;
+    private static boolean checkBalance(WireRequest request) {
+        boolean sufficientBalance = request.getAmount() < 500;
 
-        if (!sufficientBalance) System.out.println(String.format("Rejected excessive request of $%d", req.getAmount()));
+        if (!sufficientBalance) System.out.println(String.format("Rejected excessive request of $%d", request.getAmount()));
 
         return sufficientBalance;
     }
@@ -97,7 +92,6 @@ public class WireRequestsTopology {
                 .setNumPartitions(4)
                 .filter(WireRequestsTopology::fraudDetect)
                 .setName("all-branches-fraud-detect")
-                .repartition(2)
                 .log();
 
         Config config = new Config();
