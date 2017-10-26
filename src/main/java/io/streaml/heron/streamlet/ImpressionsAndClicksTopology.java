@@ -4,6 +4,7 @@ import com.twitter.heron.api.utils.Utils;
 import com.twitter.heron.dsl.*;
 
 import java.io.Serializable;
+import java.security.Key;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
@@ -67,7 +68,6 @@ public class ImpressionsAndClicksTopology {
     public static void main(String[] args) {
         Builder builder = Builder.createBuilder();
 
-        /*
         KVStreamlet<String, String> impressions = builder.newSource(AdImpression::new)
                 .setName("incoming-impressions")
                 .mapToKV(i -> new KeyValue<>(i.getAdId(), i.getUserId()));
@@ -77,10 +77,16 @@ public class ImpressionsAndClicksTopology {
                 .mapToKV(c -> new KeyValue<>(c.getAdId(), c.getUserId()));
 
         impressions
-                .union(clicks)
+                .join(
+                        clicks,
+                        WindowConfig.TumblingCountWindow(100),
+                        (x, y) -> (x.equals(y)) ? 1 : 0
+                )
+                .reduceByKeyAndWindow(
+                        WindowConfig.TumblingCountWindow(100),
+                        (cum, i) -> cum + i
+                )
                 .log();
-
-        */
 
         new Runner().run(args[0], new Config(), builder);
     }
