@@ -6,113 +6,87 @@ import com.twitter.heron.dsl.Config;
 import com.twitter.heron.dsl.Runner;
 import com.twitter.heron.dsl.Streamlet;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class WireRequestsTopology {
-    private static final int MAX_ALLOWABLE_BALANCE = 500;
-
-    private static final List<String> USERS = Arrays.asList(
-            "honest-tina",
-            "honest-abe",
-            "honest-ahmed",
-            "scheming-dave"
-    );
-
-    private static final List<String> BLACKLISTED_USERS = Arrays.asList(
-            "scheming-dave"
-    );
+    private static final List<String> USERS = Arrays.asList("honest-tina", "honest-jeff", "scheming-dave", "scheming-linda");
+    private static final List<String> FRAUDULENT_USERS = Arrays.asList("scheming-dave", "scheming-linda");
 
     private static <T> T randomFromList(List<T> ls) {
-        return ls.get(ThreadLocalRandom.current().nextInt(ls.size()));
+        return ls.get(new Random().nextInt(ls.size()));
     }
 
-    private static final class WireRequest {
-        private final String userId;
-        private final int amount;
+    private static class WireRequest implements Serializable {
+        private String userId;
+        private int amount;
 
-        WireRequest(long sleepMillis) {
-            Utils.sleep(sleepMillis);
+        WireRequest() {
+            Utils.sleep(10);
             this.userId = randomFromList(USERS);
             this.amount = ThreadLocalRandom.current().nextInt(1000);
-        }
-
-        int getAmount() {
-            return amount;
+            System.out.println(this.toString());
         }
 
         String getUserId() {
             return userId;
         }
 
+        int getAmount() {
+            return amount;
+        }
+
+        void setUserId(String userId) {
+            this.userId = userId;
+        }
+
+        void setAmount(int amount) {
+            this.amount = amount;
+        }
+
         @Override
         public String toString() {
-            return String.format("(user: %s, amount: %d)", userId, amount);
+            return String.format("Accepted request for $%d from user %s", amount, userId);
         }
     }
 
-    private static boolean detectFraud(WireRequest request) {
-        boolean trustedUser = !BLACKLISTED_USERS.contains(request.getUserId());
+    private static boolean fraudDetect(WireRequest req) {
+        boolean fraudulent = FRAUDULENT_USERS.contains(req.getUserId());
 
-        if (!trustedUser) {
-            System.out.println(
-                    String.format("Untrusted user %s attempted to make a transaction and was rejected",
-                            request.getUserId())
-            );
-        }
+        if (fraudulent) System.out.println(String.format("Rejected fraudulent user %s", req.getUserId()));
 
-        return trustedUser;
+        return !fraudulent;
     }
 
-    private static boolean checkBalance(WireRequest request) {
-        boolean sufficientBalance = request.getAmount() < MAX_ALLOWABLE_BALANCE;
+    private static boolean checkBalance(WireRequest req) {
+        boolean sufficientBalance = req.getAmount() < 500;
 
-        if (!sufficientBalance) {
-            System.out.println(
-                    String.format("User %s attempted to draw an excessive amount: $%d",
-                            request.getUserId(),
-                            request.getAmount()));
-        }
+        if (!sufficientBalance) System.out.println(String.format("Rejected excessive request of $%d", req.getAmount()));
 
-        return request.getAmount() < MAX_ALLOWABLE_BALANCE;
+        return sufficientBalance;
     }
 
     public static void main(String[] args) {
         Builder builder = Builder.createBuilder();
 
-        Streamlet<WireRequest> quietBranch = builder.newSource(() -> new WireRequest(20))
-                .setName("quiet-branch-requests");
-        Streamlet<WireRequest> mediumBranch = builder.newSource(() -> new WireRequest(10))
-                .setName("medium-branch-requests");
-        Streamlet<WireRequest> busyBranch = builder.newSource(() -> new WireRequest(5))
-                .setName("busy-branch-requests");
+        Streamlet<WireRequest> branch1 = builder.newSource(WireRequest::new)
+                .filter(WireRequestsTopology::checkBalance);
+        Streamlet<WireRequest> branch2 = builder.newSource(WireRequest::new)
+                .filter(WireRequestsTopology::checkBalance);
+        Streamlet<WireRequest> branch3 = builder.newSource(WireRequest::new)
+                .filter(WireRequestsTopology::checkBalance);
 
-        quietBranch
-                .setNumPartitions(1)
-                .filter(WireRequestsTopology::checkBalance)
-                .setName("quiet-branch-check-balance");
-
-        mediumBranch
-                .setNumPartitions(2)
-                .filter(WireRequestsTopology::checkBalance)
-                .setName("medium-branch-check-balance");
-
-        busyBranch
-                .setNumPartitions(4)
-                .filter(WireRequestsTopology::checkBalance)
-                .setName("busy-branch-check-balance");
-
-        quietBranch
-                .union(mediumBranch)
-                .setName("unite-quiet-and-medium")
-                .union(busyBranch)
-                .setName("unite-all")
-                .filter(WireRequestsTopology::detectFraud)
-                .setName("detect-fraud-all-branches")
-                .log();
+        branch1
+                .union(branch2)
+                .union(branch3)
+                .filter(WireRequestsTopology::fraudDetect);
 
         Config config = new Config();
+        config.setDeliverySemantics(Config.DeliverySemantics.EFFECTIVELY_ONCE);
+        config.setNumContainers(2);
 
         new Runner().run(args[0], config, builder);
     }
