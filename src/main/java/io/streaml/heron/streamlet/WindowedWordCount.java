@@ -1,6 +1,6 @@
 package io.streaml.heron.streamlet;
 
-import com.twitter.heron.dsl.*;
+import com.twitter.heron.streamlet.*;
 
 import java.util.Arrays;
 import java.util.List;

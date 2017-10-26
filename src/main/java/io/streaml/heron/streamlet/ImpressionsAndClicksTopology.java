@@ -1,13 +1,14 @@
 package io.streaml.heron.streamlet;
 
 import com.twitter.heron.api.utils.Utils;
-import com.twitter.heron.dsl.*;
+import com.twitter.heron.streamlet.*;
 
 import java.io.Serializable;
-import java.security.Key;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -32,7 +33,7 @@ public class ImpressionsAndClicksTopology {
         private String userId;
 
         AdImpression() {
-            Utils.sleep(10);
+            Utils.sleep(ThreadLocalRandom.current().nextInt(10));
             this.adId = randomFromList(ADS);
             this.userId = randomFromList(USERS);
         }
@@ -43,6 +44,11 @@ public class ImpressionsAndClicksTopology {
 
         String getUserId() {
             return userId;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("(ad: %s, user: %s)", adId, userId);
         }
     }
 
@@ -51,7 +57,7 @@ public class ImpressionsAndClicksTopology {
         private String userId;
 
         AdClick() {
-            Utils.sleep(10);
+            Utils.sleep(ThreadLocalRandom.current().nextInt(10));
             this.adId = randomFromList(ADS);
             this.userId = randomFromList(USERS);
         }
@@ -63,6 +69,11 @@ public class ImpressionsAndClicksTopology {
         String getUserId() {
             return userId;
         }
+
+        @Override
+        public String toString() {
+            return String.format("(ad: %s, user: %s)", adId, userId);
+        }
     }
 
     public static void main(String[] args) {
@@ -70,22 +81,39 @@ public class ImpressionsAndClicksTopology {
 
         KVStreamlet<String, String> impressions = builder.newSource(AdImpression::new)
                 .setName("incoming-impressions")
-                .mapToKV(i -> new KeyValue<>(i.getAdId(), i.getUserId()));
+                .mapToKV(i -> {
+                    System.out.println(String.format("Incoming impression: %s", i));
+                    return new KeyValue<>(i.getAdId(), i.getUserId());
+                })
+                .setName("map-impression-to-kv");
 
         KVStreamlet<String, String> clicks = builder.newSource(AdClick::new)
                 .setName("incoming-clicks")
-                .mapToKV(c -> new KeyValue<>(c.getAdId(), c.getUserId()));
+                .mapToKV(c -> {
+                    System.out.println(String.format("Incoming click: %s", c));
+                    return new KeyValue<>(c.getAdId(), c.getUserId());
+                })
+                .setName("map-click-to-kv");
 
         impressions
                 .join(
                         clicks,
-                        WindowConfig.TumblingCountWindow(100),
-                        (x, y) -> (x.equals(y)) ? 1 : 0
+                        WindowConfig.TumblingTimeWindow(Duration.ofSeconds(5)),
+                        (x, y) -> {
+                            System.out.println(String.format("Joining %s and %s", x, y));
+                            return (x.equals(y)) ? 1 : 0;
+                        }
                 )
+                .setName("join-operation")
                 .reduceByKeyAndWindow(
-                        WindowConfig.TumblingCountWindow(100),
-                        (cum, i) -> cum + i
+                        WindowConfig.TumblingTimeWindow(Duration.ofSeconds(5)),
+                        (cumulative, i) -> {
+                            int sum = cumulative + i;
+                            System.out.println(String.format("Sum: %d", sum));
+                            return sum;
+                        }
                 )
+                .setName("reduce-operation")
                 .log();
 
         new Runner().run(args[0], new Config(), builder);

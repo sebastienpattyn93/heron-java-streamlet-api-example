@@ -1,10 +1,10 @@
 package io.streaml.heron.streamlet;
 
 import com.twitter.heron.api.utils.Utils;
-import com.twitter.heron.dsl.Builder;
-import com.twitter.heron.dsl.Config;
-import com.twitter.heron.dsl.Runner;
-import com.twitter.heron.dsl.Streamlet;
+import com.twitter.heron.streamlet.Builder;
+import com.twitter.heron.streamlet.Config;
+import com.twitter.heron.streamlet.Runner;
+import com.twitter.heron.streamlet.Streamlet;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -24,11 +24,10 @@ public class WireRequestsTopology {
         private String userId;
         private int amount;
 
-        WireRequest() {
+        WireRequest(int sleep) {
             Utils.sleep(10);
             this.userId = randomFromList(USERS);
             this.amount = ThreadLocalRandom.current().nextInt(1000);
-            System.out.println(this.toString());
         }
 
         String getUserId() {
@@ -72,15 +71,15 @@ public class WireRequestsTopology {
     public static void main(String[] args) {
         Builder builder = Builder.createBuilder();
 
-        Streamlet<WireRequest> quietBranch = builder.newSource(WireRequest::new)
+        Streamlet<WireRequest> quietBranch = builder.newSource(() -> new WireRequest(20))
                 .setNumPartitions(1)
                 .filter(WireRequestsTopology::checkBalance);
 
-        Streamlet<WireRequest> mediumBranch = builder.newSource(WireRequest::new)
+        Streamlet<WireRequest> mediumBranch = builder.newSource(() -> new WireRequest(10))
                 .setNumPartitions(3)
                 .filter(WireRequestsTopology::checkBalance);
 
-        Streamlet<WireRequest> busyBranch = builder.newSource(WireRequest::new)
+        Streamlet<WireRequest> busyBranch = builder.newSource(() -> new WireRequest(3))
                 .setNumPartitions(5)
                 .filter(WireRequestsTopology::checkBalance);
 

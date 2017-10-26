@@ -1,7 +1,7 @@
 package io.streaml.heron.streamlet;
 
 import com.twitter.heron.common.basics.ByteAmount;
-import com.twitter.heron.dsl.*;
+import com.twitter.heron.streamlet.*;
 
 import java.util.concurrent.ThreadLocalRandom;
 
