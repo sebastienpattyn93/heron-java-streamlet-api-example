@@ -49,7 +49,7 @@ public class WireRequestsTopology {
 
         @Override
         public String toString() {
-            return String.format("Accepted request for %d from user %s", amount, userId);
+            return String.format("Accepted request for $%d from user %s", amount, userId);
         }
     }
 
@@ -64,7 +64,7 @@ public class WireRequestsTopology {
     private static boolean checkBalance(WireRequest req) {
         boolean sufficientBalance = req.getAmount() < 500;
 
-        if (!sufficientBalance) System.out.println(String.format("Rejected excessive request of %d", req.getAmount()));
+        if (!sufficientBalance) System.out.println(String.format("Rejected excessive request of $%d", req.getAmount()));
 
         return sufficientBalance;
     }
@@ -72,36 +72,15 @@ public class WireRequestsTopology {
     public static void main(String[] args) {
         Builder builder = Builder.createBuilder();
 
-        Streamlet<WireRequest> incomingWireRequests = builder.newSource(WireRequest::new)
+        builder.newSource(WireRequest::new)
                 .setName("incoming-requests")
-                .setNumPartitions(2);
-
-        List<Streamlet<WireRequest>> forkedStream = incomingWireRequests.clone(2);
-
-        Streamlet<WireRequest> stream1 = forkedStream.get(0)
-                .filter(WireRequestsTopology::checkBalance)
-                .setName("check-balance-stream-1")
-                .repartition(1)
-                .setName("reduce-to-1-partition-stream-1")
+                .setNumPartitions(2)
                 .filter(WireRequestsTopology::fraudDetect)
-                .setName("fraud-detect-stream-1");
-
-        Streamlet<WireRequest> stream2 = forkedStream.get(1)
+                .setName("fraud-detection-filter")
+                .setNumPartitions(3)
                 .filter(WireRequestsTopology::checkBalance)
-                .setName("check-balance-stream-2")
-                .repartition(1)
-                .setName("reduce-to-1-partition-stream-2")
-                .filter(WireRequestsTopology::fraudDetect)
-                .setName("fraud-detect-stream-2");
-
-        Streamlet<WireRequest> reunitedStream = stream1.union(stream2)
-                .setName("unite-streams")
-                .repartition(2)
-                .setName("increase-to-2-partitions");
-
-        reunitedStream
-                .repartition(1)
-                .setName("reduce-back-to-1-partition")
+                .setName("balance-check-filter")
+                .setNumPartitions(2)
                 .log();
 
         Config config = new Config();
