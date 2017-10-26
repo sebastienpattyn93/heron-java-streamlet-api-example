@@ -72,25 +72,23 @@ public class WireRequestsTopology {
     public static void main(String[] args) {
         Builder builder = Builder.createBuilder();
 
-        Streamlet<WireRequest> branch1 = builder.newSource(WireRequest::new)
+        Streamlet<WireRequest> quietBranch = builder.newSource(WireRequest::new)
                 .setNumPartitions(1)
-                .filter(WireRequestsTopology::checkBalance)
-                .setNumPartitions(2);
+                .filter(WireRequestsTopology::checkBalance);
 
-        Streamlet<WireRequest> branch2 = builder.newSource(WireRequest::new)
+        Streamlet<WireRequest> mediumBranch = builder.newSource(WireRequest::new)
                 .setNumPartitions(3)
-                .filter(WireRequestsTopology::checkBalance)
-                .setNumPartitions(2);
+                .filter(WireRequestsTopology::checkBalance);
 
-        Streamlet<WireRequest> branch3 = builder.newSource(WireRequest::new)
+        Streamlet<WireRequest> busyBranch = builder.newSource(WireRequest::new)
                 .setNumPartitions(5)
-                .filter(WireRequestsTopology::checkBalance)
-                .setNumPartitions(2);
+                .filter(WireRequestsTopology::checkBalance);
 
-        branch1
-                .union(branch2)
-                .union(branch3)
+        quietBranch
+                .union(mediumBranch)
+                .union(busyBranch)
                 .filter(WireRequestsTopology::fraudDetect)
+                .setNumPartitions(5)
                 .log();
 
         Config config = new Config();
