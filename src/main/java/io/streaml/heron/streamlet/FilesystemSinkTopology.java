@@ -34,6 +34,6 @@ public class FilesystemSinkTopology {
 
         Config config = new Config();
 
-        new Runner().run(args[0], config, Builder.createBuilder());
+        new Runner().run(args[0], config, builder);
     }
 }
