@@ -24,8 +24,8 @@ public class WireRequestsTopology {
         private String userId;
         private int amount;
 
-        WireRequest() {
-            Utils.sleep(10);
+        WireRequest(long millis) {
+            Utils.sleep(millis);
             this.userId = randomFromList(USERS);
             this.amount = ThreadLocalRandom.current().nextInt(1000);
             System.out.println(this.toString());
@@ -72,17 +72,30 @@ public class WireRequestsTopology {
     public static void main(String[] args) {
         Builder builder = Builder.createBuilder();
 
-        Streamlet<WireRequest> branch1 = builder.newSource(WireRequest::new)
-                .filter(WireRequestsTopology::checkBalance);
-        Streamlet<WireRequest> branch2 = builder.newSource(WireRequest::new)
-                .filter(WireRequestsTopology::checkBalance);
-        Streamlet<WireRequest> branch3 = builder.newSource(WireRequest::new)
-                .filter(WireRequestsTopology::checkBalance);
+        Streamlet<WireRequest> quietBranch = builder.newSource(() -> new WireRequest(20))
+                .setNumPartitions(1)
+                .setName("quiet-branch-requests")
+                .filter(WireRequestsTopology::checkBalance)
+                .setName("quiet-branch-check-balance");
+        Streamlet<WireRequest> mediumBranch = builder.newSource(() -> new WireRequest(10))
+                .setNumPartitions(2)
+                .setName("medium-branch-requests")
+                .filter(WireRequestsTopology::checkBalance)
+                .setName("medium-branch-check-balance");
+        Streamlet<WireRequest> busyBranch = builder.newSource(() -> new WireRequest(5))
+                .setNumPartitions(4)
+                .setName("busy-branch-requests")
+                .filter(WireRequestsTopology::checkBalance)
+                .setName("busy-branch-check-balance");
 
-        branch1
-                .union(branch2)
-                .union(branch3)
-                .filter(WireRequestsTopology::fraudDetect);
+        quietBranch
+                .union(mediumBranch)
+                .setName("union-1")
+                .union(busyBranch)
+                .setName("union-2")
+                .filter(WireRequestsTopology::fraudDetect)
+                .setName("all-branches-fraud-detect")
+                .log();
 
         Config config = new Config();
         config.setDeliverySemantics(Config.DeliverySemantics.EFFECTIVELY_ONCE);
