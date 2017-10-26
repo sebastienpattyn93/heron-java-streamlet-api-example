@@ -73,16 +73,25 @@ public class WireRequestsTopology {
         Builder builder = Builder.createBuilder();
 
         Streamlet<WireRequest> branch1 = builder.newSource(WireRequest::new)
-                .filter(WireRequestsTopology::checkBalance);
+                .setNumPartitions(1)
+                .filter(WireRequestsTopology::checkBalance)
+                .setNumPartitions(2);
+
         Streamlet<WireRequest> branch2 = builder.newSource(WireRequest::new)
-                .filter(WireRequestsTopology::checkBalance);
+                .setNumPartitions(3)
+                .filter(WireRequestsTopology::checkBalance)
+                .setNumPartitions(2);
+
         Streamlet<WireRequest> branch3 = builder.newSource(WireRequest::new)
-                .filter(WireRequestsTopology::checkBalance);
+                .setNumPartitions(5)
+                .filter(WireRequestsTopology::checkBalance)
+                .setNumPartitions(2);
 
         branch1
                 .union(branch2)
                 .union(branch3)
-                .filter(WireRequestsTopology::fraudDetect);
+                .filter(WireRequestsTopology::fraudDetect)
+                .log();
 
         Config config = new Config();
         config.setDeliverySemantics(Config.DeliverySemantics.EFFECTIVELY_ONCE);
