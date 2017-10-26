@@ -13,8 +13,18 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class WireRequestsTopology {
-    private static final List<String> USERS = Arrays.asList("honest-tina", "honest-jeff", "scheming-dave", "scheming-linda");
-    private static final List<String> FRAUDULENT_USERS = Arrays.asList("scheming-dave", "scheming-linda");
+    private static final List<String> USERS = Arrays.asList(
+            "honest-tina",
+            "honest-jeff",
+            "scheming-dave",
+            "scheming-linda"
+    );
+
+    private static final List<String> FRAUDULENT_USERS = Arrays.asList(
+            "scheming-dave",
+            "scheming-linda"
+    );
+
     private static final int MAX_ALLOWABLE_AMOUNT = 500;
 
     private static <T> T randomFromList(List<T> ls) {
@@ -25,11 +35,11 @@ public class WireRequestsTopology {
         private String userId;
         private int amount;
 
-        WireRequest(long millis) {
-            Utils.sleep(millis);
+        WireRequest(long delay) {
+            Utils.sleep(delay);
             this.userId = randomFromList(USERS);
             this.amount = ThreadLocalRandom.current().nextInt(1000);
-            System.out.println(this.toString());
+            System.out.println(String.format("New wire request: %s", this));
         }
 
         String getUserId() {
@@ -39,6 +49,11 @@ public class WireRequestsTopology {
         int getAmount() {
             return amount;
         }
+
+        @Override
+        public String toString() {
+            return String.format("(user: %s, amount: %d)", userId, amount);
+        }
     }
 
     private static boolean fraudDetect(WireRequest request) {
@@ -47,9 +62,12 @@ public class WireRequestsTopology {
         boolean fraudulent = FRAUDULENT_USERS.contains(request.getUserId());
 
         if (fraudulent) {
-            logMessage = String.format("Rejected fraudulent user %s", request.getUserId());
+            logMessage = String.format("Rejected fraudulent user %s",
+                    request.getUserId());
         } else {
-            logMessage = String.format("Accepted request for $%d from user %s", request.getAmount(), request.getUserId());
+            logMessage = String.format("Accepted request for $%d from user %s",
+                    request.getAmount(),
+                    request.getUserId());
         }
 
         System.out.println(logMessage);
@@ -60,7 +78,9 @@ public class WireRequestsTopology {
     private static boolean checkRequestAmount(WireRequest request) {
         boolean sufficientBalance = request.getAmount() < MAX_ALLOWABLE_AMOUNT;
 
-        if (!sufficientBalance) System.out.println(String.format("Rejected excessive request of $%d", request.getAmount()));
+        if (!sufficientBalance) System.out.println(
+                String.format("Rejected excessive request of $%d",
+                        request.getAmount()));
 
         return sufficientBalance;
     }
