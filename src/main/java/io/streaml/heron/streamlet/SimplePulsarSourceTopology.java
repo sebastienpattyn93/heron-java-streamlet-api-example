@@ -11,16 +11,20 @@ public class SimplePulsarSourceTopology {
     private static class PulsarSource implements Source<String> {
         private PulsarClient client;
         private Consumer consumer;
+        private String pulsarConnectionUrl;
         private String consumeTopic;
+        private String subscription;
 
-        PulsarSource(String topic) {
+        PulsarSource(String url, String topic, String subscription) {
+            this.pulsarConnectionUrl = url;
             this.consumeTopic = topic;
+            this.subscription = subscription;
         }
 
         public void setup(Context context) {
             try {
-                client = PulsarClient.create("pulsar://localhost:6650");
-                consumer = client.subscribe(consumeTopic, "test-subscription");
+                client = PulsarClient.create(pulsarConnectionUrl);
+                consumer = client.subscribe(consumeTopic, subscription);
             } catch (PulsarClientException e) {
                 throw new RuntimeException(e);
             }
@@ -40,9 +44,18 @@ public class SimplePulsarSourceTopology {
     public static void main(String[] args) {
         Builder builder = Builder.createBuilder();
 
-        builder.newSource(new PulsarSource("persistent://sample/standalone/ns1/heron-pulsar-test-topic"))
+        Source<String> pulsarSource = new PulsarSource(
+                "pulsar://localhost:6650", // Pulsar connection URL
+                "persistent://sample/standalone/ns1/heron-pulsar-test-topic", // Pulsar topic
+                "subscription-1" // Subscription name for Pulsar topic
+        );
+
+        builder.newSource(pulsarSource)
                 .log();
 
-        new Runner().run(args[0], new Config(), builder);
+        Config config = new Config();
+        config.setDeliverySemantics(Config.DeliverySemantics.EFFECTIVELY_ONCE);
+
+        new Runner().run(args[0], config, builder);
     }
 }
