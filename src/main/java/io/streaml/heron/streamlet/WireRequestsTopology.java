@@ -85,7 +85,7 @@ public class WireRequestsTopology {
         return sufficientBalance;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         Builder builder = Builder.createBuilder();
 
         Streamlet<WireRequest> quietBranch = builder.newSource(() -> new WireRequest(20))
@@ -119,6 +119,8 @@ public class WireRequestsTopology {
         config.setDeliverySemantics(Config.DeliverySemantics.EFFECTIVELY_ONCE);
         config.setNumContainers(2);
 
-        new Runner().run(args[0], config, builder);
+        String topologyName = HeronStreamletUtils.getTopologyName(args);
+
+        new Runner().run(topologyName, config, builder);
     }
 }

@@ -41,8 +41,8 @@ public class SimplePulsarSourceTopology {
         public void cleanup() {}
     }
 
-    public static void main(String[] args) {
-        Builder builder = Builder.createBuilder();
+    public static void main(String[] args) throws Exception {
+        Builder processingGraphBuilder = Builder.createBuilder();
 
         Source<String> pulsarSource = new PulsarSource(
                 "pulsar://localhost:6650", // Pulsar connection URL
@@ -50,12 +50,14 @@ public class SimplePulsarSourceTopology {
                 "subscription-1" // Subscription name for Pulsar topic
         );
 
-        builder.newSource(pulsarSource)
+        processingGraphBuilder.newSource(pulsarSource)
                 .log();
 
         Config config = new Config();
         config.setDeliverySemantics(Config.DeliverySemantics.EFFECTIVELY_ONCE);
 
-        new Runner().run(args[0], config, builder);
+        String topologyName = HeronStreamletUtils.getTopologyName(args);
+
+        new Runner().run(topologyName, config, processingGraphBuilder);
     }
 }

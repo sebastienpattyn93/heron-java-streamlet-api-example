@@ -7,7 +7,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
 public class TransformsTopology {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         Builder builder = Builder.createBuilder();
 
         builder.newSource(() -> {
@@ -35,6 +35,8 @@ public class TransformsTopology {
                 })
                 .log();
 
-        new Runner().run(args[0], new Config(), builder);
+        String topologyName = HeronStreamletUtils.getTopologyName(args);
+
+        new Runner().run(topologyName, new Config(), builder);
     }
 }

@@ -41,13 +41,13 @@ public class FilesystemSinkTopology {
         }
     }
 
-    public static void main(String[] args) throws IOException {
-        Builder builder = Builder.createBuilder();
+    public static void main(String[] args) throws Exception {
+        Builder processingGraphBuilder = Builder.createBuilder();
 
         File f = File.createTempFile("filesystem-sink-example", ".tmp");
         System.out.println(String.format("Ready to write to file %s", f.getAbsolutePath()));
 
-        builder.newSource(() -> {
+        processingGraphBuilder.newSource(() -> {
                     Utils.sleep(500);
                     return ThreadLocalRandom.current().nextInt(100);
                 })
@@ -55,6 +55,8 @@ public class FilesystemSinkTopology {
 
         Config config = new Config();
 
-        new Runner().run(args[0], config, builder);
+        String topologyName = HeronStreamletUtils.getTopologyName(args);
+
+        new Runner().run(topologyName, config, processingGraphBuilder);
     }
 }
