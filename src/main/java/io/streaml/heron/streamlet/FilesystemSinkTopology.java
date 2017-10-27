@@ -43,8 +43,8 @@ public class FilesystemSinkTopology {
 
     public static void main(String[] args) throws IOException {
         Builder builder = Builder.createBuilder();
-        
-        File f = File.createTempFile("test", ".tmp");
+
+        File f = File.createTempFile("filesystem-sink-example", ".tmp");
         System.out.println(String.format("Ready to write to file %s", f.getAbsolutePath()));
 
         builder.newSource(() -> {
