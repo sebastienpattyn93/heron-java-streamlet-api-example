@@ -1,10 +1,8 @@
 package io.streaml.heron.streamlet;
 
-import com.twitter.heron.api.utils.Utils;
 import com.twitter.heron.streamlet.*;
 
 import java.io.Serializable;
-import java.text.DateFormat;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -30,13 +28,11 @@ public class ImpressionsAndClicksTopology {
         private String adId;
         private String userId;
         private String impressionId;
-        private long time;
 
         AdImpression() {
             this.adId = HeronStreamletUtils.randomFromList(ADS);
             this.userId = HeronStreamletUtils.randomFromList(USERS);
             this.impressionId = UUID.randomUUID().toString();
-            this.time = System.currentTimeMillis();
             LOG.info(String.format("Emitting impression: %s", this));
         }
 
@@ -51,10 +47,9 @@ public class ImpressionsAndClicksTopology {
         @Override
         public String toString() {
             return String.format(
-                    "(adId; %s, impressionId: %s, time: %s)",
+                    "(adId; %s, impressionId: %s)",
                     adId,
-                    impressionId,
-                    DateFormat.getDateInstance(DateFormat.SHORT).format(time)
+                    impressionId
             );
         }
     }
@@ -63,13 +58,11 @@ public class ImpressionsAndClicksTopology {
         private String adId;
         private String userId;
         private String clickId;
-        private long time;
 
         AdClick() {
             this.adId = HeronStreamletUtils.randomFromList(ADS);
             this.userId = HeronStreamletUtils.randomFromList(USERS);
             this.clickId = UUID.randomUUID().toString();
-            this.time = System.currentTimeMillis();
             LOG.info(String.format("Emitting click: %s", this));
         }
 
@@ -84,10 +77,9 @@ public class ImpressionsAndClicksTopology {
         @Override
         public String toString() {
             return String.format(
-                    "(adId; %s, clickId: %s, time: %s)",
+                    "(adId; %s, clickId: %s)",
                     adId,
-                    clickId,
-                    DateFormat.getDateInstance(DateFormat.SHORT).format(time)
+                    clickId
             );
         }
     }
@@ -110,8 +102,7 @@ public class ImpressionsAndClicksTopology {
 
         impressions
                 .join(clicks, WindowConfig.TumblingTimeWindow(Duration.ofSeconds(5)), ImpressionsAndClicksTopology::incrementIfSameUser)
-                //.reduceByKeyAndWindow(WindowConfig.TumblingTimeWindow(Duration.ofSeconds(10)), ImpressionsAndClicksTopology::countCumulativeClicks)
-                //.mapToStreamlet(kv -> String.format("(ad: %s, clicks: %s)", kv.getKey(), kv.getValue()))
+                .reduceByKeyAndWindow(WindowConfig.TumblingTimeWindow(Duration.ofSeconds(10)), ImpressionsAndClicksTopology::countCumulativeClicks)
                 .log();
 
         Config config = new Config();
