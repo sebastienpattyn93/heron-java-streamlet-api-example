@@ -1,7 +1,7 @@
 package io.streaml.heron.streamlet;
 
 import com.twitter.heron.api.utils.Utils;
-import com.twitter.heron.dsl.*;
+import com.twitter.heron.streamlet.*;
 
 import java.io.File;
 import java.io.IOException;

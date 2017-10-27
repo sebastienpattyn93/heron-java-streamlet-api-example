@@ -1,10 +1,10 @@
 package io.streaml.heron.streamlet;
 
 import com.twitter.heron.api.utils.Utils;
-import com.twitter.heron.dsl.Builder;
-import com.twitter.heron.dsl.Config;
-import com.twitter.heron.dsl.Runner;
-import com.twitter.heron.dsl.Streamlet;
+import com.twitter.heron.streamlet.Builder;
+import com.twitter.heron.streamlet.Config;
+import com.twitter.heron.streamlet.Runner;
+import com.twitter.heron.streamlet.Streamlet;
 
 import java.io.Serializable;
 import java.util.Arrays;

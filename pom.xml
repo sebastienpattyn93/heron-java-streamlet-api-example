@@ -17,7 +17,12 @@
         <dependency>
             <groupId>com.twitter.heron</groupId>
             <artifactId>heron-api</artifactId>
-            <version>0.16.3</version>
+            <version>0.16.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.pulsar</groupId>
+            <artifactId>pulsar-client</artifactId>
+            <version>1.19.0-incubating</version>
         </dependency>
     </dependencies>
 
