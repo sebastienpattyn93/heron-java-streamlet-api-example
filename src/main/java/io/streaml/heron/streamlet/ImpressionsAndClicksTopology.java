@@ -1,5 +1,6 @@
 package io.streaml.heron.streamlet;
 
+import com.twitter.heron.api.utils.Utils;
 import com.twitter.heron.streamlet.*;
 
 import java.io.Serializable;
@@ -30,6 +31,7 @@ public class ImpressionsAndClicksTopology {
         private String impressionId;
 
         AdImpression() {
+            Utils.sleep(500);
             this.adId = HeronStreamletUtils.randomFromList(ADS);
             this.userId = HeronStreamletUtils.randomFromList(USERS);
             this.impressionId = UUID.randomUUID().toString();
@@ -60,6 +62,7 @@ public class ImpressionsAndClicksTopology {
         private String clickId;
 
         AdClick() {
+            Utils.sleep(500);
             this.adId = HeronStreamletUtils.randomFromList(ADS);
             this.userId = HeronStreamletUtils.randomFromList(USERS);
             this.clickId = UUID.randomUUID().toString();
@@ -101,8 +104,8 @@ public class ImpressionsAndClicksTopology {
                 .mapToKV(click -> new KeyValue<>(click.getAdId(), click.getUserId()));
 
         impressions
-                .join(clicks, WindowConfig.TumblingTimeWindow(Duration.ofSeconds(5)), ImpressionsAndClicksTopology::incrementIfSameUser)
-                .reduceByKeyAndWindow(WindowConfig.TumblingTimeWindow(Duration.ofSeconds(10)), ImpressionsAndClicksTopology::countCumulativeClicks)
+                .join(clicks, WindowConfig.TumblingCountWindow(100), ImpressionsAndClicksTopology::incrementIfSameUser)
+                .reduceByKeyAndWindow(WindowConfig.TumblingCountWindow(200), ImpressionsAndClicksTopology::countCumulativeClicks)
                 .log();
 
         Config config = new Config();
