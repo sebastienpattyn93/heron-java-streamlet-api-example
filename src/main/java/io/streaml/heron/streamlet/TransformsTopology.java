@@ -8,6 +8,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
 public class TransformsTopology {
+    // This transformer leaves incoming values unmodified. The Consumer simply accepts those
+    // values as-is during the transform phase.
     private static class DoNothingTransformer<T> implements SerializableTransformer<T, T> {
         public void setup(Context context) {}
 
@@ -18,10 +20,12 @@ public class TransformsTopology {
         public void cleanup() {}
     }
 
+    // This transformer increments incoming values by a user-supplied increment (which can also,
+    // of course, be negative).
     private static class IncrementTransformer implements SerializableTransformer<Integer, Integer> {
         private int increment;
 
-        public IncrementTransformer(int increment) {
+        IncrementTransformer(int increment) {
             this.increment = increment;
         }
 
