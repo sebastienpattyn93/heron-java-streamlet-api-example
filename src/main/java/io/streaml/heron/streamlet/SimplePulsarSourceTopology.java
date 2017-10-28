@@ -1,6 +1,7 @@
 package io.streaml.heron.streamlet;
 
 import com.twitter.heron.streamlet.*;
+import io.streaml.heron.streamlet.utils.StreamletUtils;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
@@ -56,7 +57,7 @@ public class SimplePulsarSourceTopology {
         Config config = new Config();
         config.setDeliverySemantics(Config.DeliverySemantics.EFFECTIVELY_ONCE);
 
-        String topologyName = HeronStreamletUtils.getTopologyName(args);
+        String topologyName = StreamletUtils.getTopologyName(args);
 
         new Runner().run(topologyName, config, processingGraphBuilder);
     }

@@ -5,6 +5,7 @@ import com.twitter.heron.streamlet.Builder;
 import com.twitter.heron.streamlet.Config;
 import com.twitter.heron.streamlet.Runner;
 import com.twitter.heron.streamlet.Streamlet;
+import io.streaml.heron.streamlet.utils.StreamletUtils;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -119,7 +120,7 @@ public class WireRequestsTopology {
         config.setDeliverySemantics(Config.DeliverySemantics.EFFECTIVELY_ONCE);
         config.setNumContainers(2);
 
-        String topologyName = HeronStreamletUtils.getTopologyName(args);
+        String topologyName = StreamletUtils.getTopologyName(args);
 
         new Runner().run(topologyName, config, builder);
     }

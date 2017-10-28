@@ -2,9 +2,9 @@ package io.streaml.heron.streamlet;
 
 import com.twitter.heron.api.utils.Utils;
 import com.twitter.heron.streamlet.*;
+import io.streaml.heron.streamlet.utils.StreamletUtils;
 
 import java.io.Serializable;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -31,9 +31,9 @@ public class ImpressionsAndClicksTopology {
         private String impressionId;
 
         AdImpression() {
-            Utils.sleep(500);
-            this.adId = HeronStreamletUtils.randomFromList(ADS);
-            this.userId = HeronStreamletUtils.randomFromList(USERS);
+            Utils.sleep(50);
+            this.adId = StreamletUtils.randomFromList(ADS);
+            this.userId = StreamletUtils.randomFromList(USERS);
             this.impressionId = UUID.randomUUID().toString();
             LOG.info(String.format("Emitting impression: %s", this));
         }
@@ -62,9 +62,9 @@ public class ImpressionsAndClicksTopology {
         private String clickId;
 
         AdClick() {
-            Utils.sleep(500);
-            this.adId = HeronStreamletUtils.randomFromList(ADS);
-            this.userId = HeronStreamletUtils.randomFromList(USERS);
+            Utils.sleep(50);
+            this.adId = StreamletUtils.randomFromList(ADS);
+            this.userId = StreamletUtils.randomFromList(USERS);
             this.clickId = UUID.randomUUID().toString();
             LOG.info(String.format("Emitting click: %s", this));
         }
@@ -110,7 +110,7 @@ public class ImpressionsAndClicksTopology {
 
         Config config = new Config();
 
-        String topologyName = HeronStreamletUtils.getTopologyName(args);
+        String topologyName = StreamletUtils.getTopologyName(args);
 
         // Finally, convert the processing graph and configuration into a Heron topology
         // and run it in a Heron cluster.

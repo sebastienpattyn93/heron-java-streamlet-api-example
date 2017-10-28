@@ -2,6 +2,7 @@ package io.streaml.heron.streamlet;
 
 import com.twitter.heron.api.utils.Utils;
 import com.twitter.heron.streamlet.*;
+import io.streaml.heron.streamlet.utils.StreamletUtils;
 
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
@@ -35,7 +36,7 @@ public class TransformsTopology {
                 })
                 .log();
 
-        String topologyName = HeronStreamletUtils.getTopologyName(args);
+        String topologyName = StreamletUtils.getTopologyName(args);
 
         new Runner().run(topologyName, new Config(), builder);
     }

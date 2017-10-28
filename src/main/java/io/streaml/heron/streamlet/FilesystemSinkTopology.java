@@ -2,6 +2,7 @@ package io.streaml.heron.streamlet;
 
 import com.twitter.heron.api.utils.Utils;
 import com.twitter.heron.streamlet.*;
+import io.streaml.heron.streamlet.utils.StreamletUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,7 +56,7 @@ public class FilesystemSinkTopology {
 
         Config config = new Config();
 
-        String topologyName = HeronStreamletUtils.getTopologyName(args);
+        String topologyName = StreamletUtils.getTopologyName(args);
 
         new Runner().run(topologyName, config, processingGraphBuilder);
     }

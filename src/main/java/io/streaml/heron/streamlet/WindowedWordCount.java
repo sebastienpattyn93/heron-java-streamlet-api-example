@@ -1,6 +1,7 @@
 package io.streaml.heron.streamlet;
 
 import com.twitter.heron.streamlet.*;
+import io.streaml.heron.streamlet.utils.StreamletUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -29,7 +30,7 @@ public class WindowedWordCount {
         processingGraphBuilder
                 // The graph begins with an unbounded series of sentences chosen at random
                 // from a pre-selected list
-                .newSource(() -> HeronStreamletUtils.randomFromList(SENTENCES))
+                .newSource(() -> StreamletUtils.randomFromList(SENTENCES))
                 // Each sentence is then "flatted" into a list of individual words
                 .flatMap((sentence) -> Arrays.asList(sentence.split("\\s+")))
                 // Each word is converted into a key-value where the key is the word
@@ -47,11 +48,11 @@ public class WindowedWordCount {
 
         // Applies the default parallelism of 2 unless a different number if supplied
         // via the second CLI argument
-        int parallelism = HeronStreamletUtils.getParallelism(args, DEFAULT_PARALLELISM);
+        int parallelism = StreamletUtils.getParallelism(args, DEFAULT_PARALLELISM);
         config.setNumContainers(parallelism);
 
         // Fetch the topology name from the first CLI argument
-        String topologyName = HeronStreamletUtils.getTopologyName(args);
+        String topologyName = StreamletUtils.getTopologyName(args);
 
         // Finally, convert the processing graph and configuration into a Heron topology
         // and run it in a Heron cluster.

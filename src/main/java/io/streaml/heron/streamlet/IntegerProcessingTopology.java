@@ -2,6 +2,7 @@ package io.streaml.heron.streamlet;
 
 import com.twitter.heron.common.basics.ByteAmount;
 import com.twitter.heron.streamlet.*;
+import io.streaml.heron.streamlet.utils.StreamletUtils;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -39,7 +40,7 @@ public final class IntegerProcessingTopology {
         resources.withRam(ByteAmount.fromGigabytes(GIGABYTES_OF_RAM).asBytes());
         conf.setContainerResources(resources);
 
-        String topologyName = HeronStreamletUtils.getTopologyName(args);
+        String topologyName = StreamletUtils.getTopologyName(args);
 
         new Runner().run(topologyName, conf, builder);
     }
