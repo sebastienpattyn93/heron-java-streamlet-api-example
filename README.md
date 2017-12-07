@@ -14,14 +14,14 @@ To build a JAR (with dependencies):
 $ mvn assembly:assembly
 ```
 
-That will create a "fat" topology JAR in `target/heron-java-streamlet-api-example-0.1.0-jar-with-dependencies.jar`.
+That will create a "fat" topology JAR in `heron-java-streamlet-api-example-latest-jar-with-dependencies.jar`.
 
 ## Submitting the topology to Heron
 
 To submit the example topology to a Heron cluster:
 
 ```bash
-$ heron submit local target/heron-java-streamlet-api-example-0.1.0-jar-with-dependencies.jar \
-  io.streaml.heron.streamlet.WordCountFunctionalTopology \
-  WordCountFunctionalTopology
+$ heron submit local target/heron-java-streamlet-api-example-latest-jar-with-dependencies.jar \
+  io.streaml.heron.streamlet.WordCountStreamletTopology \
+  WordCountStreamletTopology
 ```

@@ -3,37 +3,44 @@ package io.streaml.heron.streamlet;
 import com.twitter.heron.common.basics.ByteAmount;
 import com.twitter.heron.streamlet.*;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
 
-public final class WordCountTopology {
-    private static final Logger LOG = Logger.getLogger(WordCountTopology.class.getName());
+public final class WordCountStreamletTopology {
+    private static final Logger LOG = Logger.getLogger(WordCountStreamletTopology.class.getName());
     private static final float CPU = 2.0f;
     private static final long GIGABYTES_OF_RAM = 6;
     private static final int NUM_CONTAINERS = 2;
-    private static final List<String> SENTENCES = Arrays.asList(
+
+    private static final List<String> SENTENCES_1 = Arrays.asList(
             "I have nothing to declare but my genius",
             "You can even",
             "Compassion is an action word with no boundaries",
             "To thine own self be true"
     );
 
+    private static final List<String> SENTENCES_2 = Arrays.asList(
+            "Is this the real life? Is this just fantasy?"
+    );
+
     private static <T> T randomFromList(List<T> ls) {
         return ls.get(ThreadLocalRandom.current().nextInt(ls.size()));
     }
 
-    private WordCountTopology() {
+    private WordCountStreamletTopology() {
     }
 
     public static void main(String[] args) throws Exception {
         Builder builder = Builder.createBuilder();
 
-        Streamlet<String> randomSentences = builder.newSource(() -> randomFromList(SENTENCES));
+        Streamlet<String> randomSentences1 = builder.newSource(() -> randomFromList(SENTENCES_1));
+        Streamlet<String> randomSentences2 = builder.newSource(() -> randomFromList(SENTENCES_2));
 
-        randomSentences
+        randomSentences1
+                .union(randomSentences2)
+                .map(sentence -> sentence.replace("?", ""))
                 .flatMap(sentence -> Arrays.asList(sentence.toLowerCase().split("\\s+")))
                 .reduceByKeyAndWindow(
                         word -> word,
