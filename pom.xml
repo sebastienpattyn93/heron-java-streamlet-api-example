@@ -11,13 +11,14 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <heron.version>0.17.1</heron.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>com.twitter.heron</groupId>
             <artifactId>heron-api</artifactId>
-            <version>0.16.3</version>
+            <version>${heron.version}</version>
         </dependency>
     </dependencies>
 
