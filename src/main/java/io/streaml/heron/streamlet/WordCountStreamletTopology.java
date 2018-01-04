@@ -1,7 +1,10 @@
 package io.streaml.heron.streamlet;
 
-import com.twitter.heron.common.basics.ByteAmount;
-import com.twitter.heron.streamlet.*;
+import com.twitter.heron.streamlet.Builder;
+import com.twitter.heron.streamlet.Config;
+import com.twitter.heron.streamlet.Runner;
+import com.twitter.heron.streamlet.Streamlet;
+import com.twitter.heron.streamlet.WindowConfig;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,7 +36,7 @@ public final class WordCountStreamletTopology {
     }
 
     public static void main(String[] args) throws Exception {
-        Builder builder = Builder.createBuilder();
+        Builder builder = Builder.newBuilder();
 
         Streamlet<String> randomSentences1 = builder.newSource(() -> randomFromList(SENTENCES_1));
         Streamlet<String> randomSentences2 = builder.newSource(() -> randomFromList(SENTENCES_2));
@@ -56,15 +59,13 @@ public final class WordCountStreamletTopology {
                     LOG.info(logMessage);
                 });
 
-        Resources resources = new Resources.Builder()
-                .setCpu(CPU)
-                .setRam(ByteAmount.fromGigabytes(GIGABYTES_OF_RAM).asBytes())
-                .build();
+        Config.DeliverySemantics deliverySemantics = applyDeliverySemantics(args);
 
-        Config config = new Config.Builder()
+        Config config = Config.newBuilder()
                 .setNumContainers(NUM_CONTAINERS)
-                .setDeliverySemantics(applyDeliverySemantics(args))
-                .setContainerResources(resources)
+                .setPerContainerCpu(CPU)
+                .setPerContainerRamInGigabytes(GIGABYTES_OF_RAM)
+                .setDeliverySemantics(deliverySemantics)
                 .build();
 
         String topologyName;
